@@ -36,7 +36,7 @@ type listResponse struct {
 func (h *ApiHandler) ListHandler(w http.ResponseWriter, r *http.Request) {
 	var results = []*listResponse{}
 
-	if err := h.DB.Model(&models.Result{}).Find(&results).Error; err != nil {
+	if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).Find(&results).Error; err != nil {
 		log.Error("could not get list", "err", err)
 		return
 	}

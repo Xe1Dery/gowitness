@@ -12,6 +12,7 @@ import TablePage from '@/pages/table/Table';
 import ScreenshotDetailPage from '@/pages/detail/Detail';
 import SearchResultsPage from '@/pages/search/Search';
 import JobSubmissionPage from '@/pages/submit/Submit';
+import HiddenGroupsPage from '@/pages/hidden/Hidden';
 
 import { searchAction } from '@/pages/search/action';
 import { searchLoader } from '@/pages/search/loader';
@@ -46,6 +47,10 @@ const router = createBrowserRouter([
         element: <SearchResultsPage />,
         action: searchAction,
         loader: searchLoader,
+      },
+      {
+        path: 'hidden',
+        element: <HiddenGroupsPage />
       },
       {
         path: 'submit',

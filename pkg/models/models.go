@@ -116,6 +116,17 @@ type ConsoleLog struct {
 	Value string `json:"value" gorm:"type:longtext;index:,length:191"`
 }
 
+// HiddenGroup stores perception hash groups that the user chose to hide from
+// general results (gallery, search, overview) after reviewing them via find-similar.
+type HiddenGroup struct {
+	ID                    uint `json:"id" gorm:"primarykey"`
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
+	PerceptionHashGroupID uint   `json:"perception_hash_group_id" gorm:"uniqueIndex"`
+	HiddenByResultID      uint   `json:"hidden_by_result_id"`
+	Notes                 string `json:"notes" gorm:"type:text"`
+}
+
 type Cookie struct {
 	ID       uint `json:"id" gorm:"primarykey"`
 	ResultID uint `json:"result_id"`

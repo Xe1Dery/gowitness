@@ -1,4 +1,4 @@
-import { gallery, list, statistics, wappalyzer, detail, searchresult, technologylist } from "@/lib/api/types";
+import { gallery, list, statistics, wappalyzer, detail, searchresult, technologylist, hiddengroups, hiddengroupstoggle } from "@/lib/api/types";
 
 const endpoints = {
   // api base path
@@ -41,6 +41,10 @@ const endpoints = {
     path: `/results/technology`,
     returnas: {} as technologylist
   },
+  hiddengroups: {
+    path: `/results/hidden-groups`,
+    returnas: {} as hiddengroups
+  },
 
   // post endpoints
   search: {
@@ -58,6 +62,10 @@ const endpoints = {
   submitsingle: {
     path: `/submit/single`,
     returnas: {} as detail
+  },
+  hiddengroupstoggle: {
+    path: `/results/hidden-groups`,
+    returnas: {} as hiddengroupstoggle
   }
 };
 

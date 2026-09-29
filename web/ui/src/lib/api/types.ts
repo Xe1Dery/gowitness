@@ -136,6 +136,7 @@ interface detail {
   html: string;
   title: string;
   perception_hash: string;
+  perception_hash_group_id: number;
   file_name: string;
   is_pdf: boolean;
   failed: boolean;
@@ -165,6 +166,26 @@ interface technologylist {
   technologies: string[];
 }
 
+// hidden groups
+interface hiddengroupitem {
+  perception_hash_group_id: number;
+  hidden_by_result_id: number;
+  count: number;
+  notes: string;
+  hidden_at: string;
+}
+
+interface hiddengroups {
+  total: number;
+  hidden_group_ids: number[];
+  groups: hiddengroupitem[];
+}
+
+interface hiddengroupstoggle {
+  hidden: boolean;
+  perception_hash_group_id: number;
+}
+
 export type {
   statistics,
   wappalyzer,
@@ -181,4 +202,7 @@ export type {
   detail,
   searchresult,
   technologylist,
+  hiddengroupitem,
+  hiddengroups,
+  hiddengroupstoggle,
 };

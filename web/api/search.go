@@ -65,7 +65,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		switch key {
 		case "title":
 			var titleResults []models.Result
-			if err := h.DB.Model(&models.Result{}).Where("LOWER(title) LIKE ?", lowerValue).
+			if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).Where("LOWER(title) LIKE ?", lowerValue).
 				Find(&titleResults).Error; err != nil {
 
 				log.Error("failed to get title results", "err", err)
@@ -75,7 +75,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			searchResults = appendResults(searchResults, resultIDs, titleResults, key)
 		case "tech":
 			var techResults []models.Result
-			if err := h.DB.Model(&models.Result{}).
+			if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).
 				Where("id in (?)", h.DB.Model(&models.Technology{}).
 					Select("result_id").Distinct("result_id").
 					Where("value LIKE ?", lowerValue)).
@@ -89,7 +89,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 		case "body":
 			var bodyResults []models.Result
-			if err := h.DB.Model(&models.Result{}).
+			if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).
 				Where("LOWER(html) LIKE ?", lowerValue).Find(&bodyResults).Error; err != nil {
 				log.Error("failed to get html results", "err", err)
 				return
@@ -98,7 +98,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 		case "header":
 			var headerResults []models.Result
-			if err := h.DB.Model(&models.Result{}).
+			if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).
 				Where("id in (?)", h.DB.Model(&models.Header{}).
 					Select("result_id").Distinct("result_id").
 					Where("value LIKE ?", lowerValue)).
@@ -111,7 +111,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 			searchResults = appendResults(searchResults, resultIDs, headerResults, key)
 		case "p":
 			var perceptionHashResults []models.Result
-			if err := h.DB.Model(&models.Result{}).
+			if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).
 				Where("perception_hash_group_id in (?)", h.DB.Model(&models.Result{}).
 					Select("perception_hash_group_id").Distinct("perception_hash_group_id").
 					Where(
@@ -136,7 +136,7 @@ func (h *ApiHandler) SearchHandler(w http.ResponseWriter, r *http.Request) {
 		lowerFreeText := fmt.Sprintf("%%%s%%", freeText)
 		var freeTextResults []models.Result
 
-		if err := h.DB.Model(&models.Result{}).
+		if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).
 			Where("LOWER(url) LIKE ?", lowerFreeText).
 			Or("LOWER(final_url) LIKE ?", lowerFreeText).
 			Or("LOWER(title) LIKE ?", lowerFreeText).

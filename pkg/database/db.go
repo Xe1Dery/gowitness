@@ -83,6 +83,7 @@ func Connection(uri string, shouldExist, debug bool) (*gorm.DB, error) {
 		&models.NetworkLog{},
 		&models.ConsoleLog{},
 		&models.Cookie{},
+		&models.HiddenGroup{},
 	); err != nil {
 		return nil, err
 	}

@@ -1,17 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { WideSkeleton } from "@/components/loading";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertOctagonIcon, BanIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ExternalLinkIcon,
-  FilterIcon, GroupIcon, ShieldCheckIcon, XIcon
+  EyeOffIcon, FilterIcon, GroupIcon, SearchIcon, ShieldCheckIcon, XIcon
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import * as api from "@/lib/api/api";
@@ -26,8 +27,10 @@ const GalleryPage = () => {
   const [gallery, setGallery] = useState<apitypes.galleryResult[]>();
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>();
   const [technology, setTechnology] = useState<apitypes.technologylist>();
+  const [hiddenCount, setHiddenCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [techSearch, setTechSearch] = useState("");
 
   const [searchParams, setSearchParams] = useSearchParams();
   // pagination
@@ -42,6 +45,7 @@ const GalleryPage = () => {
 
   useEffect(() => {
     getWappalyzerData(setWappalyzer, setTechnology);
+    api.get('hiddengroups').then((hg) => setHiddenCount(hg.total)).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -130,15 +134,6 @@ const GalleryPage = () => {
       return prev;
     });
   };
-
-  const sortedTechnologies = useMemo(() => {
-    if (!technology) return [];
-    const selectedTechnologies = technologyFilter.split(',').filter(Boolean);
-    return [
-      ...selectedTechnologies,
-      ...technology.technologies.filter(tech => !selectedTechnologies.includes(tech))
-    ];
-  }, [technology, technologyFilter]);
 
   const renderPageButtons = (visible: number) => {
     const pageButtons = [];
@@ -266,7 +261,7 @@ const GalleryPage = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 items-center justify-between rounded-lg">
         <div className="flex flex-wrap gap-2">
-          <Popover>
+          <Popover onOpenChange={(open) => { if (!open) setTechSearch(""); }}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[200px] justify-start">
                 <FilterIcon className="mr-2 h-4 w-4" />
@@ -279,29 +274,53 @@ const GalleryPage = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0">
-              <Command>
-                <CommandInput placeholder="Search technologies..." />
-                <CommandList>
-                  <CommandEmpty>No technology found.</CommandEmpty>
-                  <CommandGroup>
-                    {sortedTechnologies.map((tech) => (
-                      <CommandItem
-                        key={tech}
-                        onSelect={() => handleTechnologyChange(tech)}
-                      >
-                        <CheckIcon
+            <PopoverContent className="w-[220px] p-0 gap-0">
+              <div className="p-2 border-b">
+                <div className="relative">
+                  <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={techSearch}
+                    onChange={(e) => setTechSearch(e.target.value)}
+                    placeholder="Search technologies..."
+                    className="h-8 pl-8"
+                  />
+                </div>
+              </div>
+              <ScrollArea className="h-[280px]">
+                <div className="flex flex-col p-1">
+                  {(technology?.technologies ?? [])
+                    .filter((tech) => tech.toLowerCase().includes(techSearch.toLowerCase()))
+                    .map((tech) => {
+                      const selected = technologyFilter.split(',').filter(Boolean).includes(tech);
+                      return (
+                        <button
+                          key={tech}
+                          type="button"
+                          onClick={() => handleTechnologyChange(tech)}
                           className={cn(
-                            "mr-2 h-4 w-4",
-                            technologyFilter.includes(tech) ? "opacity-100" : "opacity-0"
+                            "flex items-center w-full text-sm rounded-sm px-2 py-1.5 text-left hover:bg-accent hover:text-accent-foreground",
+                            selected && "bg-accent/50"
                           )}
-                        />
-                        {tech}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+                        >
+                          <CheckIcon
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              selected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="truncate">{tech}</span>
+                        </button>
+                      );
+                    })}
+                  {(technology?.technologies ?? [])
+                    .filter((tech) => tech.toLowerCase().includes(techSearch.toLowerCase()))
+                    .length === 0 ? (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      No technology found.
+                    </div>
+                  ) : null}
+                </div>
+              </ScrollArea>
             </PopoverContent>
           </Popover>
           <Button
@@ -332,6 +351,14 @@ const GalleryPage = () => {
             <GroupIcon className="mr-2 h-4 w-4" />
             Group by Similar
           </Button>
+          {hiddenCount > 0 ? (
+            <Link to="/hidden">
+              <Badge variant="secondary" className="cursor-pointer">
+                <EyeOffIcon className="mr-1 h-3 w-3" />
+                {hiddenCount} group{hiddenCount === 1 ? "" : "s"} hidden
+              </Badge>
+            </Link>
+          ) : null}
           <div className="flex items-center space-x-2 p-2">
             <Switch
               id="show-failed"

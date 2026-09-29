@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, CopyIcon } from 'lucide-react';
+import { ExternalLink, ChevronLeft, ChevronRight, Code, ClockIcon, Trash2Icon, DownloadIcon, ImagesIcon, ZoomInIcon, CopyIcon, EyeOffIcon, EyeIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { WideSkeleton } from '@/components/loading';
 import { Form, Link, useNavigate, useParams } from 'react-router';
@@ -26,6 +26,8 @@ const ScreenshotDetailPage = () => {
   const [duration, setDuration] = useState<string>('');
   const [wappalyzer, setWappalyzer] = useState<apitypes.wappalyzer>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [groupHidden, setGroupHidden] = useState<boolean>(false);
+  const [togglingHidden, setTogglingHidden] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const { id } = useParams<{ id: string; }>();
@@ -93,6 +95,30 @@ const ScreenshotDetailPage = () => {
     }
   };
 
+  // check if this result's perception hash group is currently hidden
+  useEffect(() => {
+    if (!detail || !detail.perception_hash_group_id) return;
+    api.get('hiddengroups')
+      .then((hg) => setGroupHidden(hg.hidden_group_ids.includes(detail.perception_hash_group_id)))
+      .catch(() => setGroupHidden(false));
+  }, [detail]);
+
+  const handleToggleGroupHidden = async () => {
+    if (!detail || !detail.perception_hash_group_id || togglingHidden) return;
+    setTogglingHidden(true);
+    try {
+      const res = await api.post('hiddengroupstoggle', {
+        perception_hash_group_id: detail.perception_hash_group_id,
+        hidden_by_result_id: detail.id,
+      });
+      setGroupHidden(res.hidden);
+    } catch (e) {
+      // no-op
+    } finally {
+      setTogglingHidden(false);
+    }
+  };
+
   if (loading) return <WideSkeleton />;
   if (!detail) return;
 
@@ -135,6 +161,35 @@ const ScreenshotDetailPage = () => {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {detail.perception_hash_group_id ? (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleGroupHidden}
+                    disabled={togglingHidden}
+                  >
+                    {groupHidden ? (
+                      <>
+                        <EyeIcon className="mr-2 h-4 w-4" />
+                        Unhide Similar
+                      </>
+                    ) : (
+                      <>
+                        <EyeOffIcon className="mr-2 h-4 w-4" />
+                        Hide Similar
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{groupHidden ? "Show these visually similar screenshots in results" : "Hide all visually similar screenshots from results"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

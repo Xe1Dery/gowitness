@@ -100,7 +100,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// query the db
 	var queryResults []*models.Result
-	query := h.DB.Model(&models.Result{}).Limit(results.Limit).
+	query := excludeHiddenGroups(h.DB.Model(&models.Result{})).Limit(results.Limit).
 		Offset(offset).Preload("Technologies")
 
 	if perceptionSort {
@@ -148,7 +148,7 @@ func (h *ApiHandler) GalleryHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if err := h.DB.Model(&models.Result{}).Count(&results.TotalCount).Error; err != nil {
+	if err := excludeHiddenGroups(h.DB.Model(&models.Result{})).Count(&results.TotalCount).Error; err != nil {
 		log.Error("could not count total results", "err", err)
 		return
 	}
